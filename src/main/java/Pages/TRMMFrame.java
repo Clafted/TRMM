@@ -18,7 +18,7 @@ public class TRMMFrame extends JFrame{
 	}
 	
 	//Constructor
-	public TRMMFrame()
+	private TRMMFrame()
 	{
 		setSize(1200, 700);
 		setResizable(false);

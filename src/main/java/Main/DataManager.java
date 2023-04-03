@@ -50,7 +50,7 @@ public class DataManager {
 	private static Stack<Map> redoStack;
 
 	//A class to load, edit, and save data of the map being drawn.
-	public DataManager()
+	private DataManager()
 	{
 		//LOAD ANY EXISTING DATA
 		loadMap("../Maps/Map.txt");
