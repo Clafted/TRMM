@@ -14,8 +14,11 @@ public class DataManager {
 	private static DataManager instance;
 
 	//Texture Palette variables
-	private static Color[] defaultTexturePalette = new Color[]{new Color(20, 80, 10), new Color(20, 25, 35)};
+	private static Color[] defaultTexturePalette = new Color[]{new Color(20, 80, 10)};
 	private static Color[] texturePalette;
+	
+	//File directories
+	private static File exportsFile, savesFile;
 
 	//Map Variables
 	private static int[] defaultMapData = new int[] {
@@ -38,8 +41,6 @@ public class DataManager {
 	private static Map defaultMap = new Map(defaultMapData, 25, 15, defaultTexturePalette);
 	private static Map map;
 
-
-
 	//IO Variables
 	private static FileWriter fileWriter;
 	private static File currentFile;
@@ -55,6 +56,13 @@ public class DataManager {
 		loadMap("../Maps/Map.txt");
 		undoStack = new Stack<>();
 		redoStack = new Stack<>();
+		
+		//Create directories for exports and saves
+		exportsFile = new File("../TRMM/Exports/");
+		exportsFile.mkdirs();
+		
+		savesFile = new File("../TRMM/Maps/");
+		savesFile.mkdirs();
 	}
 
 	//------------------------------------------------------------------------------------
@@ -73,28 +81,32 @@ public class DataManager {
 	//------------------------------------------------------------------------------------
 
 	//IO METHODS
-	//Save map data to a file (return true if successful, false otherwise)
-	public static boolean export(String name)
+	//Save map data to a file (return true if successful, false otherwise), with the given options
+	public static boolean export(String name, boolean includeTxtPal, boolean includeWidth, boolean includeHeight)
 	{
 		String data = "";
 
 		try {
 			//Create a new file with the given name
-			File exportFile = new File("../Exports/" + name + ".txt");
+			File exportFile = new File("./" + exportsFile.getName() + "/" + name + ".txt");
 			exportFile.createNewFile();
 			
 			//Write data to the currently accessed map file
 			fileWriter = new FileWriter(exportFile);
 
 			//Concatenate texture palette.
-			data += "textPal: " + texturePalette.length + "\n";
-			for(int i = 0; i < texturePalette.length; i++)
+			if(includeTxtPal == true)
 			{
-				data += texturePalette[i].getRed() + " " + texturePalette[i].getGreen() + " " + texturePalette[i].getBlue() + "\n";
+				data += "textPal: " + texturePalette.length + "\n";
+				for(int i = 0; i < texturePalette.length; i++) 
+					data += texturePalette[i].getRed() 
+						+ " " + texturePalette[i].getGreen() 
+						+ " " + texturePalette[i].getBlue() + "\n";
 			}
 
 			//Concatenate map dimensions.
-			data += "W:" + map.Width() + "\tH:" + map.Height() + "\n";
+			if(includeWidth == true) data += "\nW: " + map.Width();
+			if(includeHeight == true) data += "\nH: " + map.Height() + "\n";
 
 			//Concatenate map data.
 			data += "Map:\n";
@@ -104,10 +116,9 @@ public class DataManager {
 				if(i % map.Width() == map.Width() - 1) data += "\n";
 			}
 
+			//Write the data an close it
 			fileWriter.write(data);
 			fileWriter.close();
-
-			System.out.println("Successfully saved file :)");
 
 		}catch(IOException e)
 		{
@@ -153,14 +164,19 @@ public class DataManager {
 	}
 
 	//Save the map object to a file
-	public static void saveMap()
+	public static void saveMap(String fileName)
 	{
 		try
 		{
 			//TEMPORARY. IMPLEMENT LOGIC FOR DIFFERENT MAP FILES
-			currentFile.createNewFile();
+			File saveFile = new File("./" +savesFile.getName() + "/MAP_" +  savesFile.list().length + ".txt");
 			
-			FileOutputStream fOS = new FileOutputStream(currentFile);
+			//Create parent directories
+			saveFile.getParentFile().mkdirs();
+			
+			saveFile.createNewFile();
+			
+			FileOutputStream fOS = new FileOutputStream(saveFile);
 			ObjectOutputStream oOS = new ObjectOutputStream(fOS);
 			
 			oOS.writeObject(map);
@@ -219,6 +235,9 @@ public class DataManager {
 		map = new Map(newData, newWidth, newHeight, map.TexturePalette());
 	}
 
+	//---------------------------------------------------------------------
+	
+	//UNDO AND REDO
 	//Creates a new instance of Map and saves the previous state to the undoStack.
 	public static void updateStack()
 	{

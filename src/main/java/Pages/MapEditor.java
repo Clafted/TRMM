@@ -27,7 +27,7 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 	private Color[] texturePalette;
 
 	//Map variables
-	private int xOffset = 20, yOffset = 100;
+	private int xOffset = 600 - DataManager.MapWidth() * 20, yOffset = 350 - DataManager.MapHeight() * 20;
 
 	//INPUT variables
 	//Mouse variables
@@ -60,7 +60,7 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				DataManager.saveMap();
+				DataManager.saveMap("Map");
 			}
 		});
 
@@ -154,12 +154,7 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 		yOffset += y;
 		repaint();
 	}
-	//Draw onto the map
-	public void drawTile(int mouseX, int mouseY, int value)
-	{
-		DataManager.changeTile((mouseX - xOffset) / 40, (mouseY - yOffset) / 40, value);
-		repaint();
-	}
+	
 	//Resize the map
 	public void resizeMap(int xInc, int yInc)
 	{
@@ -179,7 +174,6 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 			if(e.getX() < (DataManager.TexturePalette().length + 1)* 40 && e.getY() < 40)
 			{
 				tileType = (e.getX() / 40) - 1;
-				System.out.println(tileType);
 			}
 		}
 
@@ -187,7 +181,8 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 		if(e.getButton() == MouseEvent.BUTTON3)
 		{
 			DataManager.updateStack();
-			drawTile(e.getX(), e.getY() - 40, tileType);			
+			DataManager.changeTile((e.getX() - xOffset) / 40, (e.getY() - yOffset) / 40, tileType);
+			repaint();
 		}
 	}
 	public void mousePressed(MouseEvent e) {	
@@ -270,7 +265,8 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 			}
 		}else if(mouseRightHeldDown)
 		{
-			drawTile(e.getX() - 8, e.getY() - 32, tileType);
+			DataManager.changeTile((e.getX() - xOffset) / 40, (e.getY() - yOffset) / 40, tileType);
+			repaint();
 		}
 	}
 	public void mouseMoved(MouseEvent e){}

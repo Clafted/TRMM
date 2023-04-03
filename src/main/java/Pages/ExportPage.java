@@ -6,12 +6,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import Main.DataManager;
 import Pages.TRMMFrame.PAGES;
 
-public class ExportPage extends Page
+public class ExportPage extends Page implements ChangeListener
 {
 	public static final long serialVersionUID = 325430;
 
@@ -21,6 +24,10 @@ public class ExportPage extends Page
 
 	//Text Input
 	private JTextField name;
+	
+	//Map info inclusions
+	private JCheckBox texturePaletteCBox, widthCBox, heightCBox;
+	boolean includeTexturePalette, includeWidth, includeHeight;
 
 	public ExportPage()
 	{
@@ -41,7 +48,8 @@ public class ExportPage extends Page
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				DataManager.export(name.getText());
+				//CHANGE TO WORK WITH CHECK BOXES
+				DataManager.export(name.getText(), false, true, true);
 			}
 		});
 
@@ -53,13 +61,22 @@ public class ExportPage extends Page
 
 
 		//TEXT FIELD
-		
 		name = new JTextField("Map");
 		name.setBounds(20, 20 + 10 * DataManager.MapHeight(), 100, 20);
-
+		
+		//JCheckboxes
+		texturePaletteCBox = new JCheckBox("Texture Palette");
+		widthCBox = new JCheckBox("Width");
+		heightCBox = new JCheckBox("Height");
+		
+		//Add components
 		add(cancelButton);
 		add(exportButton);
 		add(name);
+		add(texturePaletteCBox);
+		add(widthCBox);
+		add(heightCBox);
+		
 
 	}
 
@@ -88,6 +105,11 @@ public class ExportPage extends Page
 		name.setLocation(20, 20 + 10 * DataManager.MapHeight());
 		
 		paintChildren(g);
+	}
+
+	@Override
+	public void stateChanged(ChangeEvent e) {
+//		if(e.getSource() == texturePalletteCBox) includeTexturePallette = 
 	}
 
 }
