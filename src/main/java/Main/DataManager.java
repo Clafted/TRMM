@@ -16,7 +16,7 @@ public class DataManager {
 	//Texture Palette variables
 	private static Color[] defaultTexturePalette = new Color[]{new Color(20, 80, 10)};
 	private static Color[] texturePalette;
-	
+
 	//File directories
 	private static File exportsFile, savesFile;
 
@@ -56,12 +56,12 @@ public class DataManager {
 		loadMap("../Maps/Map.txt");
 		undoStack = new Stack<>();
 		redoStack = new Stack<>();
-		
+
 		//Create directories for exports and saves
-		exportsFile = new File("../TRMM/Exports/");
+		exportsFile = new File("../Exports/");
 		exportsFile.mkdirs();
-		
-		savesFile = new File("../TRMM/Maps/");
+
+		savesFile = new File("../Maps/");
 		savesFile.mkdirs();
 	}
 
@@ -90,7 +90,7 @@ public class DataManager {
 			//Create a new file with the given name
 			File exportFile = new File("./" + exportsFile.getName() + "/" + name + ".txt");
 			exportFile.createNewFile();
-			
+
 			//Write data to the currently accessed map file
 			fileWriter = new FileWriter(exportFile);
 
@@ -100,8 +100,8 @@ public class DataManager {
 				data += "textPal: " + texturePalette.length + "\n";
 				for(int i = 0; i < texturePalette.length; i++) 
 					data += texturePalette[i].getRed() 
-						+ " " + texturePalette[i].getGreen() 
-						+ " " + texturePalette[i].getBlue() + "\n";
+					+ " " + texturePalette[i].getGreen() 
+					+ " " + texturePalette[i].getBlue() + "\n";
 			}
 
 			//Concatenate map dimensions.
@@ -140,10 +140,10 @@ public class DataManager {
 				System.out.println("Loading existing map");
 				FileInputStream fIS = new FileInputStream(currentFile);
 				ObjectInputStream oIS = new ObjectInputStream(fIS);
-				
+
 				map = (Map) oIS.readObject();
 				texturePalette = map.TexturePalette();
-				
+
 				oIS.close();
 				fIS.close();
 				return;
@@ -159,7 +159,7 @@ public class DataManager {
 			System.out.println("File is corrupt!\nUsing default map.");
 			e.printStackTrace();
 		}
-		
+
 		loadDefaultMap();
 	}
 
@@ -170,15 +170,15 @@ public class DataManager {
 		{
 			//TEMPORARY. IMPLEMENT LOGIC FOR DIFFERENT MAP FILES
 			File saveFile = new File("./" +savesFile.getName() + "/MAP_" +  savesFile.list().length + ".txt");
-			
+
 			//Create parent directories
 			saveFile.getParentFile().mkdirs();
-			
+
 			saveFile.createNewFile();
-			
+
 			FileOutputStream fOS = new FileOutputStream(saveFile);
 			ObjectOutputStream oOS = new ObjectOutputStream(fOS);
-			
+
 			oOS.writeObject(map);
 			oOS.close();
 			fOS.close();
@@ -187,7 +187,7 @@ public class DataManager {
 			System.out.println("Unable to save data!");
 		}
 	}
-	
+
 	//------------------------------------------------------------------------------------
 
 	//MAP DRAWING METHODS
@@ -214,6 +214,21 @@ public class DataManager {
 		//Calculate and create new map dimensions and array;
 		int newWidth = map.Width() + xInc;
 		int newHeight = map.Height() + yInc;
+
+		
+		//Limit map shrinking
+		if(newWidth < 3)
+		{
+			xInc += 3 - newWidth;
+			newWidth = 3;
+		}
+		if(newHeight < 3)
+		{
+			yInc += 3 - newHeight;
+			newHeight = 3;
+			
+		}
+
 		int[] newData = new int[newWidth * newHeight];
 
 		//Transfer mapData to a newly size array at a specific index range
@@ -236,7 +251,7 @@ public class DataManager {
 	}
 
 	//---------------------------------------------------------------------
-	
+
 	//UNDO AND REDO
 	//Creates a new instance of Map and saves the previous state to the undoStack.
 	public static void updateStack()
