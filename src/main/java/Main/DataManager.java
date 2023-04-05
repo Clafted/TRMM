@@ -52,8 +52,7 @@ public class DataManager {
 	//A class to load, edit, and save data of the map being drawn.
 	private DataManager()
 	{
-		//LOAD ANY EXISTING DATA
-		loadMap("../Maps/Map.txt");
+		
 		undoStack = new Stack<>();
 		redoStack = new Stack<>();
 
@@ -63,6 +62,10 @@ public class DataManager {
 
 		savesFile = new File("../Maps/");
 		savesFile.mkdirs();
+		
+		
+		//LOAD ANY EXISTING DATA
+		loadMap("../Maps/" + "Maps_" + (savesFile.list().length - 1) +".txt");
 	}
 
 	//------------------------------------------------------------------------------------
@@ -88,7 +91,7 @@ public class DataManager {
 
 		try {
 			//Create a new file with the given name
-			File exportFile = new File("./" + exportsFile.getName() + "/" + name + ".txt");
+			File exportFile = new File("../" + exportsFile.getName() + "/" + name + ".txt");
 			exportFile.createNewFile();
 
 			//Write data to the currently accessed map file
@@ -169,7 +172,7 @@ public class DataManager {
 		try
 		{
 			//TEMPORARY. IMPLEMENT LOGIC FOR DIFFERENT MAP FILES
-			File saveFile = new File("./" +savesFile.getName() + "/MAP_" +  savesFile.list().length + ".txt");
+			File saveFile = new File("../" +savesFile.getName() + "/MAP_" +  savesFile.list().length + ".txt");
 
 			//Create parent directories
 			saveFile.getParentFile().mkdirs();
