@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>novice</groupId>
   <artifactId>TRMM</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>RESIZE_UPDATE</version>
   <name>Tick-Rate Map Maker</name>
   <build>
 	  <plugins>
