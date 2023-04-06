@@ -9,13 +9,15 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 
 import javax.swing.JButton;
 
 import Main.DataManager;
 import Pages.TRMMFrame.PAGES;
 
-public class MapEditor extends Page implements MouseListener, MouseMotionListener, KeyListener
+public class MapEditor extends Page implements MouseListener, MouseMotionListener, MouseWheelListener, KeyListener
 {
 	public static final long serialVersionUID = 23445645;
 
@@ -23,31 +25,41 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 	private JButton saveButton = new JButton("Save");
 	private JButton exportButton = new JButton("Export");
 
-	//Texture 
-	private Color[] texturePalette;
+	//Colors
+	Color backgroundColor;
+	Color popUpColor;
 
-	//Map variables
-	private int xOffset = 600 - DataManager.MapWidth() * 20, yOffset = 350 - DataManager.MapHeight() * 20;
+	//Drawing variables
+	private int brushSize = 3;
 
 	//INPUT variables
 	//Mouse variables
 	private boolean mouseLeftHeldDown, mouseRightHeldDown;
 	private int mouseLastX, mouseLastY, mouseMoveX, mouseMoveY, mouseDragX, mouseDragY;
-
-	//Input variables
 	private boolean widthSizerDragged = false, heightSizerDragged = false;
+	private boolean brushSizerDragged = false;
+
+	//Map variables
+	private int xOffset = 600 - DataManager.MapWidth() * 20, yOffset = 350 - DataManager.MapHeight() * 20;
+	private int tileType = 0;
+	private int tileSize = 40;
 
 	//Other
-	private int tileType = 1;
 	private int resizeX, resizeY;
+
+	//Texture 
+	private Color[] texturePalette;
 
 	//--------------------------------------------
 
 	//Constructor
 	public MapEditor()
 	{
+		backgroundColor = new Color(50, 150, 200);
+		popUpColor = new Color(20, 30, 50, 195);
+
 		//Configure visualPanel
-		setBackground(new Color(50, 150, 200));
+		setBackground(backgroundColor);
 
 		//Configure buttons
 		saveButton.setBounds(1080, 660, 100, 20);
@@ -78,15 +90,17 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 		//Add ActionListeners
 		addMouseListener(this);
 		addMouseMotionListener(this);
+		addMouseWheelListener(this);
 		addKeyListener(this);
 	}
 
 	//Getters
-	public int WidthSizerY() { return yOffset + (DataManager.MapHeight() * 20) - 10; }
-	public int WidthSizerX() { return xOffset + DataManager.MapWidth() * 40; }
+	public int WidthSizerY() { return yOffset + (DataManager.MapHeight() * (tileSize / 2)) - 10; }
+	public int WidthSizerX() { return xOffset + DataManager.MapWidth() * tileSize + 10; }
 	public int HeightSizerY() { return yOffset - 10; }
-	public int HeightSizerX() { return xOffset + (DataManager.MapWidth() * 20) - 10; } 
+	public int HeightSizerX() { return xOffset + (DataManager.MapWidth() * (tileSize / 2)) - 10; } 
 
+	//Rendering method
 	public void paint(Graphics g)
 	{
 		super.paint(g);
@@ -102,27 +116,27 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 			g.setColor(texturePalette[DataManager.MapData()[i]]);
 
 			//Draw the tile
-			g.fillRect(xOffset + (i % DataManager.MapWidth()) * 40, yOffset + ((i / DataManager.MapWidth()) * 40), 40, 40);
+			g.fillRect(xOffset + (i % DataManager.MapWidth()) * tileSize, yOffset + ((i / DataManager.MapWidth()) * tileSize), tileSize, tileSize);
 		}
 
 		//DRAW GRID
 		g.setColor(Color.white);
 		//Draw border
-		g.drawRect(xOffset, yOffset, DataManager.MapWidth() * 40, DataManager.MapHeight() * 40);
+		g.drawRect(xOffset, yOffset, DataManager.MapWidth() * tileSize, DataManager.MapHeight() * tileSize);
 		//Draw Vertical Grid-Lines
 		for(int i = 1; i < DataManager.MapWidth(); i++)
 		{
-			g.drawLine(xOffset + (i * 40), yOffset, xOffset + (i * 40), yOffset + (DataManager.MapHeight() * 40));
+			g.drawLine(xOffset + (i * tileSize), yOffset, xOffset + (i * tileSize), yOffset + (DataManager.MapHeight() * tileSize));
 		}
 		//Draw Horizontal Grid-Lines
 		for(int i = 1; i < DataManager.MapHeight(); i++)
 		{
-			g.drawLine(xOffset, yOffset + (i * 40), xOffset + (DataManager.MapWidth() * 40), yOffset + (i * 40));
+			g.drawLine(xOffset, yOffset + (i * tileSize), xOffset + (DataManager.MapWidth() * tileSize), yOffset + (i * tileSize));
 		}
 
 		//DRAW RESIZE TABS
-		g.fillRect(xOffset + (DataManager.MapWidth() * 20) - 10, yOffset - 10, 20, 5);
-		g.fillRect(xOffset + DataManager.MapWidth() * 40, yOffset + (DataManager.MapHeight() * 20) - 10, 5, 20);
+		g.fillRect(xOffset + (DataManager.MapWidth() * (tileSize / 2)) - 10, yOffset - 10, (tileSize / 2), 5);
+		g.fillRect(xOffset + DataManager.MapWidth() * tileSize + 10, yOffset + (DataManager.MapHeight() * (tileSize / 2)) - 10, 5, (tileSize / 2));
 
 		//DRAW TEXTURE PALETTE
 		//Draw eraser
@@ -145,8 +159,34 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 		g.setColor(Color.black);
 		g.drawRect(0, 0, (texturePalette.length + 1) * 40, 40);
 
+		//Draw extra border for selected texture
+		g.setColor(Color.white);
+		g.drawRect(41 + (tileType * 40), 1, 38, 38);
+
+		//Draw pop-ups
+		drawToolBar(g);
+
 		paintChildren(g);
 	}
+
+	//RENDER TOOLBAR
+	public void drawToolBar(Graphics g)
+	{
+		//Draw background
+		g.setColor(popUpColor);
+		g.fillRect(0, 620, 300, 80);
+
+		//Draw border
+		g.setColor(Color.black);
+		g.drawRect(-1, 619, 301, 82);
+
+		//Draw brushSize slider
+		g.setColor(Color.white);
+		g.fillRect(20, 659, 100, 2);
+
+		g.fillRect(20 + ((brushSize - 1) * 10), 650, 4, 20); 
+	}
+
 	//Move the map by a given offset
 	public void offset(int x, int y)
 	{
@@ -154,12 +194,12 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 		yOffset += y;
 		repaint();
 	}
-	
+
 	//Resize the map
 	public void resizeMap(int xInc, int yInc)
 	{
 		DataManager.resizeMap(xInc, yInc);
-		yOffset -= yInc * 40;
+		yOffset -= yInc * tileSize;
 		repaint();
 	}
 
@@ -171,9 +211,12 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 		if(e.getButton() == MouseEvent.BUTTON1)
 		{
 			//Set to tileType to a number between 0 and the number of textures.
-			if(e.getX() < (DataManager.TexturePalette().length + 1)* 40 && e.getY() < 40)
+			if(e.getX() < (DataManager.TexturePalette().length + 1) * 40 && e.getY() < 40)
 			{
 				tileType = (e.getX() / 40) - 1;
+
+				//Repaint to show selected texture
+				repaint();
 			}
 		}
 
@@ -181,7 +224,15 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 		if(e.getButton() == MouseEvent.BUTTON3)
 		{
 			DataManager.updateStack();
-			DataManager.changeTile((e.getX() - xOffset) / 40, (e.getY() - yOffset) / 40, tileType);
+
+			for(int i = -brushSize / 2; i <= brushSize / 2; i++)
+			{
+				for(int j = -brushSize / 2; j <= brushSize / 2; j++)
+				{
+					DataManager.changeTile((e.getX() - xOffset) / tileSize + i, (e.getY() - yOffset) / tileSize + j, tileType);
+				}
+			}
+
 			repaint();
 		}
 	}
@@ -197,6 +248,9 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 				widthSizerDragged = true;
 			else if(e.getX() >= HeightSizerX() && e.getX() <= HeightSizerX() + 20 && e.getY() >= HeightSizerY() && e.getY() <= HeightSizerY() + 5)
 				heightSizerDragged = true;
+			else if(e.getX() >= 20 + ((brushSize - 1) *  10) && e.getX() <= 24 + ((brushSize - 1) *  10) && e.getY() >= 650 && e.getY() <= 670)
+				brushSizerDragged = true;
+			
 		}
 		else if(e.getButton() == MouseEvent.BUTTON3 && !mouseRightHeldDown)
 		{
@@ -219,6 +273,7 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 
 			widthSizerDragged = false;
 			heightSizerDragged = false;
+			brushSizerDragged = false;
 
 			if(resizeX != 0 || resizeY != 0)
 			{
@@ -249,15 +304,19 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 			mouseLastX = e.getX();
 			mouseLastY = e.getY();
 
-			if(widthSizerDragged || heightSizerDragged)
+			if(widthSizerDragged)
 			{
-				if(widthSizerDragged)
-				{
-					resizeX = (mouseDragX / 40);
-				}else if(heightSizerDragged)
-				{
-					resizeY = (-mouseDragY / 40);
-				}
+				resizeX = (mouseDragX / tileSize);
+			}else if(heightSizerDragged)
+			{
+				resizeY = (-mouseDragY / tileSize);
+			}else if(brushSizerDragged)
+			{
+				brushSize = (mouseDragX / 10);
+				repaint();
+				
+				if(brushSize > 10) brushSize = 10;
+				else if(brushSize < 1) brushSize = 1;
 			}else
 			{
 				//Offset the map by the change in position
@@ -265,11 +324,25 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 			}
 		}else if(mouseRightHeldDown)
 		{
-			DataManager.changeTile((e.getX() - xOffset) / 40, (e.getY() - yOffset) / 40, tileType);
+			for(int i = -brushSize / 2; i <= brushSize / 2; i++)
+			{
+				for(int j = -brushSize / 2; j <= brushSize / 2; j++)
+				{
+					DataManager.changeTile((e.getX() - xOffset) / tileSize + i, (e.getY() - yOffset) / tileSize + j, tileType);
+				}
+			}
+
 			repaint();
 		}
 	}
 	public void mouseMoved(MouseEvent e){}
+
+	//Zoom in and out
+	public void mouseWheelMoved(MouseWheelEvent e)
+	{
+		tileSize -= e.getWheelRotation();
+		repaint();
+	}
 
 	public void keyTyped(KeyEvent e) {}
 	public void keyPressed(KeyEvent e) 
@@ -287,4 +360,6 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 		}
 	}
 	public void keyReleased(KeyEvent e) {}
+
+
 }
