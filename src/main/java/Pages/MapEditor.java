@@ -30,7 +30,7 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 	Color popUpColor;
 
 	//Drawing variables
-	private int brushSize = 3;
+	private int brushSize = 3, tempbrushSize = brushSize;
 
 	//INPUT variables
 	//Mouse variables
@@ -244,12 +244,9 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 			mouseLastY = e.getY();
 
 			//Check if width/height of map was resized
-			if(e.getX() >= WidthSizerX() && e.getX() <= WidthSizerX() + 5 && e.getY() >= WidthSizerY() && e.getY() <= WidthSizerY() + 20)
-				widthSizerDragged = true;
-			else if(e.getX() >= HeightSizerX() && e.getX() <= HeightSizerX() + 20 && e.getY() >= HeightSizerY() && e.getY() <= HeightSizerY() + 5)
-				heightSizerDragged = true;
-			else if(e.getX() >= 20 + ((brushSize - 1) *  10) && e.getX() <= 24 + ((brushSize - 1) *  10) && e.getY() >= 650 && e.getY() <= 670)
-				brushSizerDragged = true;
+			widthSizerDragged = (e.getX() >= WidthSizerX() && e.getX() <= WidthSizerX() + 5 && e.getY() >= WidthSizerY() && e.getY() <= WidthSizerY() + 20);
+			heightSizerDragged = (e.getX() >= HeightSizerX() && e.getX() <= HeightSizerX() + 20 && e.getY() >= HeightSizerY() && e.getY() <= HeightSizerY() + 5);
+			brushSizerDragged = (e.getX() >= 20 + ((brushSize - 1) *  10) && e.getX() <= 24 + ((brushSize - 1) *  10) && e.getY() >= 650 && e.getY() <= 670);
 			
 		}
 		else if(e.getButton() == MouseEvent.BUTTON3 && !mouseRightHeldDown)
@@ -271,25 +268,26 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 			mouseDragX = 0;
 			mouseDragY = 0;
 
+			//Reset dragged states
 			widthSizerDragged = false;
 			heightSizerDragged = false;
 			brushSizerDragged = false;
+			tempbrushSize = brushSize;
 
+			//Resize the map when needed
 			if(resizeX != 0 || resizeY != 0)
 			{
 				resizeMap(resizeX, resizeY);
 				resizeX = 0;
 				resizeY = 0;
 			}
-
 			break;
 		case MouseEvent.BUTTON3:
 			mouseRightHeldDown = false;
 			break;
 		}
 	}
-	public void mouseEntered(MouseEvent e) {}
-	public void mouseExited(MouseEvent e) {}
+	
 	public void mouseDragged(MouseEvent e)
 	{
 		if(mouseLeftHeldDown && !mouseRightHeldDown)
@@ -297,31 +295,31 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 			//Calculate the mouse's movement since being held down
 			mouseMoveX = e.getX() - mouseLastX;
 			mouseMoveY = e.getY() - mouseLastY;
+			
 			//Update total distance dragged
 			mouseDragX += e.getX() - mouseLastX;
 			mouseDragY += e.getY() - mouseLastY;
+			
 			//Update the mouse's last position
 			mouseLastX = e.getX();
 			mouseLastY = e.getY();
 
-			if(widthSizerDragged)
+			//Move any dragged components
+			if(widthSizerDragged) resizeX = (mouseDragX / tileSize);
+			else if(heightSizerDragged) resizeY = (-mouseDragY / tileSize);
+			else if(brushSizerDragged)
 			{
-				resizeX = (mouseDragX / tileSize);
-			}else if(heightSizerDragged)
-			{
-				resizeY = (-mouseDragY / tileSize);
-			}else if(brushSizerDragged)
-			{
-				brushSize = (mouseDragX / 10);
-				repaint();
+				//Change brushSize by the mouse's movement
+				brushSize = (tempbrushSize + mouseDragX / 10);
 				
+				//Limit the brushSize
 				if(brushSize > 10) brushSize = 10;
 				else if(brushSize < 1) brushSize = 1;
-			}else
-			{
-				//Offset the map by the change in position
-				offset(mouseMoveX, mouseMoveY);
-			}
+				
+				repaint();
+			}else offset(mouseMoveX, mouseMoveY);
+			
+			
 		}else if(mouseRightHeldDown)
 		{
 			for(int i = -brushSize / 2; i <= brushSize / 2; i++)
@@ -336,7 +334,8 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 		}
 	}
 	public void mouseMoved(MouseEvent e){}
-
+	public void mouseEntered(MouseEvent e) {}
+	public void mouseExited(MouseEvent e) {}
 	//Zoom in and out
 	public void mouseWheelMoved(MouseWheelEvent e)
 	{

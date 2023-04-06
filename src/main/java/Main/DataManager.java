@@ -14,36 +14,20 @@ public class DataManager {
 	private static DataManager instance;
 
 	//Texture Palette variables
-	private static Color[] defaultTexturePalette = new Color[]{new Color(20, 80, 10)};
+	private static Color[] defaultTexturePalette;
 	private static Color[] texturePalette;
 
-	//File directories
-	private static File exportsFile, savesFile;
-
 	//Map Variables
-	private static int[] defaultMapData = new int[] {
-			0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-			0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-			0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-			0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-			0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-			0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-			0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-			0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-			0, 0,-1,-1,-1, 0, 0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-			0, 0, 0, 0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	};
-	private static Map defaultMap = new Map(defaultMapData, 25, 15, defaultTexturePalette);
+	private static Map defaultMap;
 	private static Map map;
+	private static int[] defaultMapData;
 
 	//IO Variables
 	private static FileWriter fileWriter;
-	private static File currentFile;
+	//File directories
+	private static File exportsFile, savesFile;
+	//Existing save files
+	File[] saveFiles;
 
 	//Action variables
 	private static Stack<Map> undoStack;
@@ -52,20 +36,42 @@ public class DataManager {
 	//A class to load, edit, and save data of the map being drawn.
 	private DataManager()
 	{
-		
+		defaultMapData = new int[] {
+				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+				0, 0,-1,-1,-1, 0, 0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+				0, 0, 0, 0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		};
+
+		defaultTexturePalette = new Color[]{new Color(20, 80, 10)};
+		defaultMap = new Map(defaultMapData, 25, 15, defaultTexturePalette);
+
 		undoStack = new Stack<>();
 		redoStack = new Stack<>();
 
 		//Create directories for exports and saves
-		exportsFile = new File("../Exports/");
+		exportsFile = new File("./Exports/");
 		exportsFile.mkdirs();
 
-		savesFile = new File("../Maps/");
+		savesFile = new File("./Maps/");
 		savesFile.mkdirs();
-		
-		
+
+
 		//LOAD ANY EXISTING DATA
-		loadMap("../Maps/" + "Maps_" + (savesFile.list().length - 1) +".txt");
+		saveFiles = savesFile.listFiles();
+		if (saveFiles.length > 0) loadMap(saveFiles[saveFiles.length - 1]);
+		else loadDefaultMap();
 	}
 
 	//------------------------------------------------------------------------------------
@@ -91,7 +97,7 @@ public class DataManager {
 
 		try {
 			//Create a new file with the given name
-			File exportFile = new File("../" + exportsFile.getName() + "/" + name + ".txt");
+			File exportFile = new File(exportsFile.getPath() + "/" + name + ".txt");
 			exportFile.createNewFile();
 
 			//Write data to the currently accessed map file
@@ -133,15 +139,14 @@ public class DataManager {
 	}
 
 	//Load a map with a given file
-	public static void loadMap(String file)
+	public static void loadMap(File file)
 	{
 		//Load map file
 		try {
-			currentFile = new File(file);
-			if(currentFile.exists())
+			if(file.exists())
 			{
 				System.out.println("Loading existing map");
-				FileInputStream fIS = new FileInputStream(currentFile);
+				FileInputStream fIS = new FileInputStream(file);
 				ObjectInputStream oIS = new ObjectInputStream(fIS);
 
 				map = (Map) oIS.readObject();
@@ -172,7 +177,7 @@ public class DataManager {
 		try
 		{
 			//TEMPORARY. IMPLEMENT LOGIC FOR DIFFERENT MAP FILES
-			File saveFile = new File("../" +savesFile.getName() + "/MAP_" +  savesFile.list().length + ".txt");
+			File saveFile = new File(savesFile.getPath() + "/MAP_" +  savesFile.list().length + ".txt");
 
 			//Create parent directories
 			saveFile.getParentFile().mkdirs();
@@ -218,7 +223,7 @@ public class DataManager {
 		int newWidth = map.Width() + xInc;
 		int newHeight = map.Height() + yInc;
 
-		
+
 		//Limit map shrinking
 		if(newWidth < 3)
 		{
@@ -229,7 +234,7 @@ public class DataManager {
 		{
 			yInc += 3 - newHeight;
 			newHeight = 3;
-			
+
 		}
 
 		int[] newData = new int[newWidth * newHeight];
