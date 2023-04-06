@@ -16,6 +16,12 @@ public class DataManager {
 	//Texture Palette variables
 	private static Color[] defaultTexturePalette;
 	private static Color[] texturePalette;
+<<<<<<< HEAD
+=======
+
+	//File directories
+	private static File exportsFile, savesFile;
+>>>>>>> origin/main
 
 	//Map Variables
 	private static Map defaultMap;
@@ -36,6 +42,7 @@ public class DataManager {
 	//A class to load, edit, and save data of the map being drawn.
 	private DataManager()
 	{
+<<<<<<< HEAD
 		defaultMapData = new int[] {
 				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -57,10 +64,14 @@ public class DataManager {
 		defaultTexturePalette = new Color[]{new Color(20, 80, 10)};
 		defaultMap = new Map(defaultMapData, 25, 15, defaultTexturePalette);
 
+=======
+		
+>>>>>>> origin/main
 		undoStack = new Stack<>();
 		redoStack = new Stack<>();
 
 		//Create directories for exports and saves
+<<<<<<< HEAD
 		exportsFile = new File("./Exports/");
 		exportsFile.mkdirs();
 
@@ -72,6 +83,17 @@ public class DataManager {
 		saveFiles = savesFile.listFiles();
 		if (saveFiles.length > 0) loadMap(saveFiles[saveFiles.length - 1]);
 		else loadDefaultMap();
+=======
+		exportsFile = new File("../Exports/");
+		exportsFile.mkdirs();
+
+		savesFile = new File("../Maps/");
+		savesFile.mkdirs();
+		
+		
+		//LOAD ANY EXISTING DATA
+		loadMap("../Maps/" + "Maps_" + (savesFile.list().length - 1) +".txt");
+>>>>>>> origin/main
 	}
 
 	//------------------------------------------------------------------------------------
@@ -97,7 +119,11 @@ public class DataManager {
 
 		try {
 			//Create a new file with the given name
+<<<<<<< HEAD
 			File exportFile = new File(exportsFile.getPath() + "/" + name + ".txt");
+=======
+			File exportFile = new File("../" + exportsFile.getName() + "/" + name + ".txt");
+>>>>>>> origin/main
 			exportFile.createNewFile();
 
 			//Write data to the currently accessed map file
@@ -177,7 +203,11 @@ public class DataManager {
 		try
 		{
 			//TEMPORARY. IMPLEMENT LOGIC FOR DIFFERENT MAP FILES
+<<<<<<< HEAD
 			File saveFile = new File(savesFile.getPath() + "/MAP_" +  savesFile.list().length + ".txt");
+=======
+			File saveFile = new File("../" +savesFile.getName() + "/MAP_" +  savesFile.list().length + ".txt");
+>>>>>>> origin/main
 
 			//Create parent directories
 			saveFile.getParentFile().mkdirs();
@@ -223,7 +253,11 @@ public class DataManager {
 		int newWidth = map.Width() + xInc;
 		int newHeight = map.Height() + yInc;
 
+<<<<<<< HEAD
 
+=======
+		
+>>>>>>> origin/main
 		//Limit map shrinking
 		if(newWidth < 3)
 		{
@@ -234,7 +268,11 @@ public class DataManager {
 		{
 			yInc += 3 - newHeight;
 			newHeight = 3;
+<<<<<<< HEAD
 
+=======
+			
+>>>>>>> origin/main
 		}
 
 		int[] newData = new int[newWidth * newHeight];

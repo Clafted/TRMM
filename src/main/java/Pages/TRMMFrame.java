@@ -25,7 +25,11 @@ public class TRMMFrame extends JFrame{
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setTitle("Map Maker");
 		setUndecorated(true);
+<<<<<<< HEAD
 		setIconImage(new ImageIcon("./Images/Icon.png").getImage());
+=======
+		setIconImage(new ImageIcon("../Images/TRMMIcon.png").getImage());
+>>>>>>> origin/main
 		
 		//Set content-pane for graphics.
 		setContentPane(PAGES.MAP_EDITOR.page);
