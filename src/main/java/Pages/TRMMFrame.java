@@ -10,7 +10,7 @@ public class TRMMFrame extends JFrame{
 	
 	public enum PAGES
 	{
-		MAP_EDITOR(new MapEditor()), EXPORT_AND_SAVE_PAGE(new ExportPage());
+		MAP_SELECTION(new MapSelectionPage()), MAP_EDITOR(new MapEditor()), EXPORT_AND_SAVE_PAGE(new ExportPage());
 		
 		public final Page page;
 		
@@ -35,7 +35,7 @@ public class TRMMFrame extends JFrame{
 		catch(Exception e) { e.printStackTrace(); }
 		
 		//Set content-pane for graphics.
-		instance.setContentPane(PAGES.MAP_EDITOR.page);
+		instance.setContentPane(PAGES.MAP_SELECTION.page);
 		instance.setVisible(true);
 		
 		return instance;

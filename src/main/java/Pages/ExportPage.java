@@ -41,7 +41,7 @@ public class ExportPage extends Page implements ChangeListener
 	{
 		options = new JPanel(new FlowLayout());
 		options.setBounds(300, 0,  900, 700);
-		options.setBackground(new Color(220, 200, 180));
+		options.setBackground(backgroundColor);
 		
 		setBackground(new Color(150, 100, 70));
 
@@ -50,7 +50,7 @@ public class ExportPage extends Page implements ChangeListener
 		saveDirectory.setLocation(20, 20 );
 
 		//Filename text-field
-		name = new JTextField("Map", 10);
+		name = new JTextField(DataManager.MapName(), 10);
 		name.setBounds(50, 50 + (10 * DataManager.MapHeight()), 200, 40);
 		
 		nameLabel = new JLabel("File Name");

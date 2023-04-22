@@ -42,10 +42,17 @@ public class DataManager {
 	//------------------------------------------------------------------------------------
 
 	//GETTTERS
+	public static String MapName() { return map.Name(); }
 	public static int[] MapData() {return map.data;}
 	public static int MapWidth() {return map.Width();}
 	public static int MapHeight() {return map.Height();}
 	public static Color[] TexturePalette() { return map.TexturePalette(); }
+	public static Map[] SavedMaps() 
+	{
+		Map[] mapList = new Map[savedMaps.size()];
+		savedMaps.toArray(mapList);
+		return mapList; 
+	}
 	public static String getExportPath()
 	{
 		try {
@@ -159,6 +166,7 @@ public class DataManager {
 		else loadDefaultMap();
 	}
 
+	@SuppressWarnings("unchecked")
 	public static void updateMaps() throws IOException, ClassNotFoundException
 	{
 		if(savedMapsFile.exists())
@@ -166,10 +174,7 @@ public class DataManager {
 			FileInputStream fileReader = new FileInputStream(savedMapsFile);
 			ObjectInputStream objectReader = new ObjectInputStream(fileReader);
 
-			while(fileReader.available() > 0)
-			{
-				savedMaps.add((Map) objectReader.readObject());
-			}
+			savedMaps = (ArrayList<Map>) objectReader.readObject();
 
 			objectReader.close();
 			fileReader.close();
@@ -230,12 +235,15 @@ public class DataManager {
 	}
 
 	//Saves the current Map Object to a txt file.
-	public static void saveMap() throws IOException
+	public static void saveMap(String name) throws IOException
 	{
-		FileOutputStream fOS = new FileOutputStream(savedMapsFile, true);
+		map.setName(name);
+		savedMaps.add(map);
+		
+		FileOutputStream fOS = new FileOutputStream(savedMapsFile);
 		ObjectOutputStream oOS = new ObjectOutputStream(fOS);
 
-		oOS.writeObject(map);
+		oOS.writeObject(savedMaps);
 		oOS.close();
 		fOS.close();
 	}
@@ -258,6 +266,7 @@ public class DataManager {
 			ObjectInputStream objectInputStream = new ObjectInputStream(instance.getClass().getResourceAsStream("/DefaultMap.txt"));
 
 			map = (Map) objectInputStream.readObject();
+			map.setName("Map_" + savedMaps.size());
 
 			objectInputStream.close();
 		}catch(Exception e)
@@ -307,7 +316,7 @@ public class DataManager {
 			}
 		}
 
-		map = new Map(newData, newWidth, newHeight, map.TexturePalette());
+		map = new Map(map.Name(), newData, newWidth, newHeight, map.TexturePalette());
 	}
 
 	//---------------------------------------------------------------------
@@ -316,14 +325,14 @@ public class DataManager {
 	//Creates a new instance of Map and saves the previous state to the undoStack.
 	public static void updateStack()
 	{
-		undoStack.add(new Map(map.data.clone(), map.Width(), map.Height(), map.TexturePalette()));
+		undoStack.add(new Map(map.Name(),map.data.clone(), map.Width(), map.Height(), map.TexturePalette()));
 	}
 
 	//Undo a previous edit to the map
 	public static void undoAction()
 	{
 		if(undoStack.empty()) return;
-		redoStack.add(new Map(map.data.clone(), map.Width(), map.Height(), map.TexturePalette()));
+		redoStack.add(new Map(map.Name(),map.data.clone(), map.Width(), map.Height(), map.TexturePalette()));
 		map = undoStack.pop();
 	}
 
@@ -331,7 +340,7 @@ public class DataManager {
 	public static void redoAction()
 	{
 		if(redoStack.empty()) return;
-		undoStack.add(new Map(map.data.clone(), map.Width(), map.Height(), map.TexturePalette()));
+		undoStack.add(new Map(map.Name(),map.data.clone(), map.Width(), map.Height(), map.TexturePalette()));
 		map = redoStack.pop();
 	}
 }

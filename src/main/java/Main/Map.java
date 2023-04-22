@@ -11,9 +11,11 @@ public class Map implements Serializable
 	public int[] data;
 	private ArrayList<Color> texturePalette;
 	private final int width, height;
+	private String name;
 
-	public Map(int[] data, int width, int height, Color[] texturePalette)
+	public Map(String name, int[] data, int width, int height, Color[] texturePalette)
 	{
+		this.name = name;
 		this.data = data;
 		this.width = width;
 		this.height = height;
@@ -24,9 +26,12 @@ public class Map implements Serializable
 		for(Color color : texturePalette) this.texturePalette.add(color);
 	}
 
+	public String Name() { return name; }
 	public int Width() { return width; }
 	public int Height() { return height; }
 	public int Size() { return width * height; }
+	
+	public void setName(String name) { this.name = name; }
 
 	public void addTexture(int r, int g, int b) { texturePalette.add(new Color(r, g, b)); }
 	public Color[] TexturePalette()

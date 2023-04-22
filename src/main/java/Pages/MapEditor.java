@@ -14,6 +14,7 @@ import java.awt.event.MouseWheelListener;
 import java.io.IOException;
 
 import javax.swing.JButton;
+import javax.swing.JTextField;
 
 import Main.DataManager;
 import Pages.TRMMFrame.PAGES;
@@ -25,6 +26,10 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 	//Buttons
 	private JButton saveButton = new JButton("Save");
 	private JButton exportButton = new JButton("Export");
+	private JButton mapSelectionButton = new JButton("Maps");
+	
+	//Text Field
+	private JTextField mapNameField = new JTextField(DataManager.MapName(), 10);
 
 	//Colors
 	Color backgroundColor;
@@ -67,6 +72,11 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 		saveButton.setFocusable(false);
 		exportButton.setBounds(960, 660, 100, 20);
 		exportButton.setFocusable(false);
+		mapSelectionButton.setBounds(1120, 10, 70, 20);
+		
+		//Configure JTextField
+		mapNameField.setBounds(850, 660, 100, 20);
+		mapNameField.setFocusable(true);
 
 		//Add actions to the buttons.
 		saveButton.addActionListener(new ActionListener()
@@ -75,7 +85,7 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 			{
 				try
 				{
-					DataManager.saveMap();
+					DataManager.saveMap(mapNameField.getText());
 				}catch(IOException error)
 				{
 					System.out.println("Unable to save map!");
@@ -93,8 +103,17 @@ public class MapEditor extends Page implements MouseListener, MouseMotionListene
 			}
 		});
 
+		mapSelectionButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e)
+			{
+				TRMMFrame.changePage(PAGES.MAP_SELECTION);
+			}
+		});
+		
 		add(saveButton);
 		add(exportButton);
+		add(mapSelectionButton);
+		add(mapNameField);
 
 		//Add ActionListeners
 		addMouseListener(this);
