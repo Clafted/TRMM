@@ -2,8 +2,18 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>novice</groupId>
   <artifactId>TRMM</artifactId>
-  <version>RESIZE_UPDATE</version>
+  <version>FILE_UPDATE</version>
   <name>Tick-Rate Map Maker</name>
+  
+  <dependencies>
+	  <dependency>
+		  <groupId>org.junit.jupiter</groupId>
+		  <artifactId>junit-jupiter</artifactId>
+		  <version>5.8.2</version>
+	  </dependency>
+  </dependencies>
+ 
+  
   <build>
 	  <plugins>
 		  <plugin>

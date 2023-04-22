@@ -10,7 +10,7 @@ public class TRMMFrame extends JFrame{
 	
 	public enum PAGES
 	{
-		MAP_EDITOR(new MapEditor()), EXPORT_PAGE(new ExportPage());
+		MAP_EDITOR(new MapEditor()), EXPORT_AND_SAVE_PAGE(new ExportPage());
 		
 		public final Page page;
 		
@@ -18,30 +18,26 @@ public class TRMMFrame extends JFrame{
 	}
 	
 	//Constructor
-	private TRMMFrame()
-	{
-		setSize(1200, 700);
-		setResizable(false);
-		setDefaultCloseOperation(EXIT_ON_CLOSE);
-		setTitle("Map Maker");
-		setUndecorated(true);
-<<<<<<< HEAD
-		setIconImage(new ImageIcon("./Images/Icon.png").getImage());
-=======
-		setIconImage(new ImageIcon("../Images/TRMMIcon.png").getImage());
->>>>>>> origin/main
-		
-		//Set content-pane for graphics.
-		setContentPane(PAGES.MAP_EDITOR.page);
-		
-		setVisible(true);
-		
-	}
+	private TRMMFrame(){}
 	
 	//Singleton method
 	public static TRMMFrame getInstance()
 	{
+		
 		if(instance == null) instance = new TRMMFrame();
+		
+		instance.setSize(1200, 700);
+		instance.setResizable(false);
+		instance.setDefaultCloseOperation(EXIT_ON_CLOSE);
+		instance.setTitle("Map Maker");
+		instance.setUndecorated(true);
+		try { instance.setIconImage(new ImageIcon(instance.getClass().getResource("/Images/Icon.png")).getImage()); }
+		catch(Exception e) { e.printStackTrace(); }
+		
+		//Set content-pane for graphics.
+		instance.setContentPane(PAGES.MAP_EDITOR.page);
+		instance.setVisible(true);
+		
 		return instance;
 	}
 	

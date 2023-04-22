@@ -8,93 +8,36 @@ import java.io.FileWriter;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Properties;
 import java.util.Stack;
+
 
 public class DataManager {
 	private static DataManager instance;
 
-	//Texture Palette variables
-	private static Color[] defaultTexturePalette;
-	private static Color[] texturePalette;
-<<<<<<< HEAD
-=======
-
-	//File directories
-	private static File exportsFile, savesFile;
->>>>>>> origin/main
-
 	//Map Variables
-	private static Map defaultMap;
 	private static Map map;
-	private static int[] defaultMapData;
 
 	//IO Variables
 	private static FileWriter fileWriter;
+
 	//File directories
-	private static File exportsFile, savesFile;
+	private static File MapMakerRoot, exportsFolder, savedMapsFile;
+
 	//Existing save files
-	File[] saveFiles;
+	private static ArrayList<Map> savedMaps;
+
+	//Properties
+	private static Properties properties;
+	private static File configFile;
 
 	//Action variables
 	private static Stack<Map> undoStack;
 	private static Stack<Map> redoStack;
 
 	//A class to load, edit, and save data of the map being drawn.
-	private DataManager()
-	{
-<<<<<<< HEAD
-		defaultMapData = new int[] {
-				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-				0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-				0, 0,-1,-1,-1, 0, 0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-				0, 0, 0, 0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-		};
-
-		defaultTexturePalette = new Color[]{new Color(20, 80, 10)};
-		defaultMap = new Map(defaultMapData, 25, 15, defaultTexturePalette);
-
-=======
-		
->>>>>>> origin/main
-		undoStack = new Stack<>();
-		redoStack = new Stack<>();
-
-		//Create directories for exports and saves
-<<<<<<< HEAD
-		exportsFile = new File("./Exports/");
-		exportsFile.mkdirs();
-
-		savesFile = new File("./Maps/");
-		savesFile.mkdirs();
-
-
-		//LOAD ANY EXISTING DATA
-		saveFiles = savesFile.listFiles();
-		if (saveFiles.length > 0) loadMap(saveFiles[saveFiles.length - 1]);
-		else loadDefaultMap();
-=======
-		exportsFile = new File("../Exports/");
-		exportsFile.mkdirs();
-
-		savesFile = new File("../Maps/");
-		savesFile.mkdirs();
-		
-		
-		//LOAD ANY EXISTING DATA
-		loadMap("../Maps/" + "Maps_" + (savesFile.list().length - 1) +".txt");
->>>>>>> origin/main
-	}
+	private DataManager(){}
 
 	//------------------------------------------------------------------------------------
 
@@ -102,10 +45,56 @@ public class DataManager {
 	public static int[] MapData() {return map.data;}
 	public static int MapWidth() {return map.Width();}
 	public static int MapHeight() {return map.Height();}
-	public static Color[] TexturePalette() { return texturePalette; }
-	public static DataManager GetInstance()
+	public static Color[] TexturePalette() { return map.TexturePalette(); }
+	public static String getExportPath()
 	{
-		if(instance == null) instance = new DataManager();
+		try {
+			properties.load(new FileInputStream(configFile));
+			return properties.getProperty("preferredExportDirectory");
+		}catch(Exception e)
+		{
+			System.out.println("Unable to read configurations!");
+			e.printStackTrace();
+
+			return null;
+		}
+	}
+
+	public static DataManager getInstance()
+	{
+		if(instance == null)
+		{
+			instance = new DataManager();
+
+			//Create action stack
+			undoStack = new Stack<>();
+			redoStack = new Stack<>();
+
+			savedMaps = new ArrayList<>();
+			properties = new Properties();
+
+			//Load any existing user-made folders
+			MapMakerRoot = new File(System.getenv("APPDATA") + "/MapMaker");
+			exportsFolder = new File(MapMakerRoot.getAbsolutePath() + "/Exports");
+			savedMapsFile = new File(MapMakerRoot.getAbsolutePath() + "/SaveMaps.txt");
+			configFile = new File(MapMakerRoot.getAbsolutePath() + "/config.properties");
+
+			updateConfigurations();
+			try
+			{
+				updateMaps();
+			}catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+
+			//LOAD ANY EXISTING DATA
+			if(savedMaps.size() > 0)
+			{
+				loadSavedMap(savedMaps.size() - 1);
+			}else loadDefaultMap();
+		}
+
 		return instance;
 	}
 
@@ -116,14 +105,13 @@ public class DataManager {
 	public static boolean export(String name, boolean includeTxtPal, boolean includeWidth, boolean includeHeight)
 	{
 		String data = "";
+		Color[] texturePalette = map.TexturePalette();
 
 		try {
 			//Create a new file with the given name
-<<<<<<< HEAD
-			File exportFile = new File(exportsFile.getPath() + "/" + name + ".txt");
-=======
-			File exportFile = new File("../" + exportsFile.getName() + "/" + name + ".txt");
->>>>>>> origin/main
+			File exportFile = new File(exportsFolder.getAbsolutePath() + "/" + name + ".txt");
+
+			System.out.println("Exporting file: " + exportFile);
 			exportFile.createNewFile();
 
 			//Write data to the currently accessed map file
@@ -164,66 +152,92 @@ public class DataManager {
 		return true;
 	}
 
-	//Load a map with a given file
-	public static void loadMap(File file)
+	//Load a map and its texturePalette with a given file
+	public static void loadSavedMap(int index)
 	{
-		//Load map file
-		try {
-			if(file.exists())
-			{
-				System.out.println("Loading existing map");
-				FileInputStream fIS = new FileInputStream(file);
-				ObjectInputStream oIS = new ObjectInputStream(fIS);
-
-				map = (Map) oIS.readObject();
-				texturePalette = map.TexturePalette();
-
-				oIS.close();
-				fIS.close();
-				return;
-			}else {
-				System.out.println("Using default map.");
-			}
-		}catch(IOException e)
-		{
-			System.out.println("Trouble accessing file!\nUsing default map.");
-			e.printStackTrace();
-		}catch(Exception e)
-		{
-			System.out.println("File is corrupt!\nUsing default map.");
-			e.printStackTrace();
-		}
-
-		loadDefaultMap();
+		if(savedMaps.size() > 0) map = savedMaps.get(index);
+		else loadDefaultMap();
 	}
 
-	//Save the map object to a file
-	public static void saveMap(String fileName)
+	public static void updateMaps() throws IOException, ClassNotFoundException
 	{
-		try
+		if(savedMapsFile.exists())
 		{
-			//TEMPORARY. IMPLEMENT LOGIC FOR DIFFERENT MAP FILES
-<<<<<<< HEAD
-			File saveFile = new File(savesFile.getPath() + "/MAP_" +  savesFile.list().length + ".txt");
-=======
-			File saveFile = new File("../" +savesFile.getName() + "/MAP_" +  savesFile.list().length + ".txt");
->>>>>>> origin/main
+			FileInputStream fileReader = new FileInputStream(savedMapsFile);
+			ObjectInputStream objectReader = new ObjectInputStream(fileReader);
 
-			//Create parent directories
-			saveFile.getParentFile().mkdirs();
+			while(fileReader.available() > 0)
+			{
+				savedMaps.add((Map) objectReader.readObject());
+			}
 
-			saveFile.createNewFile();
-
-			FileOutputStream fOS = new FileOutputStream(saveFile);
-			ObjectOutputStream oOS = new ObjectOutputStream(fOS);
-
-			oOS.writeObject(map);
-			oOS.close();
-			fOS.close();
-		}catch(Exception e)
-		{
-			System.out.println("Unable to save data!");
+			objectReader.close();
+			fileReader.close();
 		}
+	}
+
+	//Creates folders for saved, exported, and other files
+	public static void createAppDataFolder() throws IOException
+	{
+		if(MapMakerRoot.exists()) return;
+
+		MapMakerRoot.mkdirs();
+		exportsFolder.mkdir();
+		savedMapsFile.createNewFile(); 
+		configFile.createNewFile();
+
+		// Write fields to new configuration file
+		properties.put("preferredExportDirectory", exportsFolder.getAbsolutePath());
+		properties.store(new FileOutputStream(configFile), null);
+	}
+
+	//Load any existing user configurations
+	private static void updateConfigurations()
+	{
+		if(configFile.exists())
+		{
+			try
+			{
+				properties.load(new FileInputStream(configFile));
+				exportsFolder = new File(properties.getProperty("preferredExportDirectory"));
+			}catch(IOException e)
+			{
+				System.out.println("Unable to load cofiguration!");
+				e.printStackTrace();
+			}
+		}else {
+			System.out.println("App Data Folder not found. Creating new folders...");
+			try
+			{
+				createAppDataFolder();
+			}catch(Exception e)
+			{
+				System.out.println("Unable to create root folder!");
+				e.printStackTrace();
+			}
+		}
+	}
+
+	// Change the directory of the exported Maps
+	public static void updateExportDirectory(String path)
+	{
+		if(configFile.exists() == false) return;
+
+		properties.setProperty("preferredExportDirectory", path);
+
+		try { properties.store(new FileOutputStream(configFile), null); System.out.println("Changed directory to: " + path);}
+		catch (IOException e) { e.printStackTrace(); }
+	}
+
+	//Saves the current Map Object to a txt file.
+	public static void saveMap() throws IOException
+	{
+		FileOutputStream fOS = new FileOutputStream(savedMapsFile, true);
+		ObjectOutputStream oOS = new ObjectOutputStream(fOS);
+
+		oOS.writeObject(map);
+		oOS.close();
+		fOS.close();
 	}
 
 	//------------------------------------------------------------------------------------
@@ -239,8 +253,18 @@ public class DataManager {
 	//Load the default map.
 	public static void loadDefaultMap()
 	{
-		map = defaultMap;
-		texturePalette = map.TexturePalette();
+		try
+		{
+			ObjectInputStream objectInputStream = new ObjectInputStream(instance.getClass().getResourceAsStream("/DefaultMap.txt"));
+
+			map = (Map) objectInputStream.readObject();
+
+			objectInputStream.close();
+		}catch(Exception e)
+		{
+			System.out.println("Trouble loading default map!");
+			e.printStackTrace();
+		}
 	}
 
 	//Resizes the map by the given values (REPLACES MAP)
@@ -253,11 +277,6 @@ public class DataManager {
 		int newWidth = map.Width() + xInc;
 		int newHeight = map.Height() + yInc;
 
-<<<<<<< HEAD
-
-=======
-		
->>>>>>> origin/main
 		//Limit map shrinking
 		if(newWidth < 3)
 		{
@@ -268,11 +287,6 @@ public class DataManager {
 		{
 			yInc += 3 - newHeight;
 			newHeight = 3;
-<<<<<<< HEAD
-
-=======
-			
->>>>>>> origin/main
 		}
 
 		int[] newData = new int[newWidth * newHeight];

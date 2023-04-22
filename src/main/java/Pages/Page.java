@@ -15,7 +15,6 @@ public class Page extends JPanel implements ActionListener{
 		setFocusable(true);
 	}
 
-
 	@Override
 	public void actionPerformed(ActionEvent e) {}
 }
