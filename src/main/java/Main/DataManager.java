@@ -42,11 +42,14 @@ public class DataManager {
 	//------------------------------------------------------------------------------------
 
 	//GETTTERS
-	public static String MapName() { return map.Name(); }
+	public static String MapName() { return map.name; }
 	public static int[] MapData() {return map.data;}
-	public static int MapWidth() {return map.Width();}
-	public static int MapHeight() {return map.Height();}
-	public static Color[] TexturePalette() { return map.TexturePalette(); }
+	public static int MapWidth() {return map.width;}
+	public static int MapHeight() {return map.height;}
+	public static Color[] TexturePalette() {
+		Color[] list = new Color[map.texturePalette.size()];
+		map.texturePalette.toArray(list);
+		return list; }
 	public static Map[] SavedMaps() 
 	{
 		Map[] mapList = new Map[savedMaps.size()];
@@ -112,7 +115,6 @@ public class DataManager {
 	public static boolean export(String name, boolean includeTxtPal, boolean includeWidth, boolean includeHeight)
 	{
 		String data = "";
-		Color[] texturePalette = map.TexturePalette();
 
 		try {
 			//Create a new file with the given name
@@ -127,23 +129,23 @@ public class DataManager {
 			//Concatenate texture palette.
 			if(includeTxtPal == true)
 			{
-				data += "textPal: " + texturePalette.length + "\n";
-				for(int i = 0; i < texturePalette.length; i++) 
-					data += texturePalette[i].getRed() 
-					+ " " + texturePalette[i].getGreen() 
-					+ " " + texturePalette[i].getBlue() + "\n";
+				data += "textPal: " + map.texturePalette.size() + "\n";
+				for(int i = 0; i < map.texturePalette.size(); i++) 
+					data += map.texturePalette.get(i).getRed() 
+					+ " " + map.texturePalette.get(i).getGreen() 
+					+ " " + map.texturePalette.get(i).getBlue() + "\n";
 			}
 
 			//Concatenate map dimensions.
-			if(includeWidth == true) data += "\nW: " + map.Width();
-			if(includeHeight == true) data += "\nH: " + map.Height() + "\n";
+			if(includeWidth == true) data += "\nW: " + map.width;
+			if(includeHeight == true) data += "\nH: " + map.height + "\n";
 
 			//Concatenate map data.
 			data += "Map:\n";
 			for(int i = 0; i < map.data.length; i++)
 			{
 				data += map.data[i] + ((map.data[i] > -1) ? "  " : " ");
-				if(i % map.Width() == map.Width() - 1) data += "\n";
+				if(i % map.width == map.width - 1) data += "\n";
 			}
 
 			//Write the data an close it
@@ -237,7 +239,7 @@ public class DataManager {
 	//Saves the current Map Object to a txt file.
 	public static void saveMap(String name) throws IOException
 	{
-		map.setName(name);
+		map.name = name;
 		savedMaps.add(map);
 		
 		FileOutputStream fOS = new FileOutputStream(savedMapsFile);
@@ -247,6 +249,28 @@ public class DataManager {
 		oOS.close();
 		fOS.close();
 	}
+	
+	//Delete a map stored at the given index
+	public static void deleteMap(int index)
+	{
+		if(index >= savedMaps.size()) return;
+		
+		savedMaps.remove(index);
+		
+		try
+		{
+			FileOutputStream fOS = new FileOutputStream(savedMapsFile);
+			ObjectOutputStream oOS = new ObjectOutputStream(fOS);
+
+			oOS.writeObject(savedMaps);
+			oOS.close();
+			fOS.close();
+		}catch(IOException e)
+		{
+			System.out.println("Trouble deleting map!");
+			e.printStackTrace();
+		}
+	}
 
 	//------------------------------------------------------------------------------------
 
@@ -254,8 +278,8 @@ public class DataManager {
 	//Change the type of tile at a given index
 	public static void changeTile(int x, int y, int value)
 	{
-		if(x >= 0 && x < map.Width() && y >= 0 && y < map.Height())
-			map.data[x + (y * map.Width())] = value;
+		if(x >= 0 && x < map.width && y >= 0 && y < map.height)
+			map.data[x + (y * map.width)] = value;
 	}
 
 	//Load the default map.
@@ -266,7 +290,7 @@ public class DataManager {
 			ObjectInputStream objectInputStream = new ObjectInputStream(instance.getClass().getResourceAsStream("/DefaultMap.txt"));
 
 			map = (Map) objectInputStream.readObject();
-			map.setName("Map_" + savedMaps.size());
+			map.name = "Map_" + savedMaps.size();
 
 			objectInputStream.close();
 		}catch(Exception e)
@@ -283,8 +307,8 @@ public class DataManager {
 		if(xInc == 0 && yInc == 0) return;
 
 		//Calculate and create new map dimensions and array;
-		int newWidth = map.Width() + xInc;
-		int newHeight = map.Height() + yInc;
+		int newWidth = map.width + xInc;
+		int newHeight = map.height + yInc;
 
 		//Limit map shrinking
 		if(newWidth < 3)
@@ -301,10 +325,10 @@ public class DataManager {
 		int[] newData = new int[newWidth * newHeight];
 
 		//Transfer mapData to a newly size array at a specific index range
-		for(int i = 0, o = (yInc < 0) ? -yInc * map.Width() : 0; i < newData.length; i++)
+		for(int i = 0, o = (yInc < 0) ? -yInc * map.width : 0; i < newData.length; i++)
 		{
 			//Skip iteration if i isn't within 0 and (mapWidth * mapHeight) - 1
-			if(i / newWidth < yInc || i % newWidth >= map.Width())
+			if(i / newWidth < yInc || i % newWidth >= map.width)
 			{
 				newData[i] = -1;
 			}else{
@@ -312,11 +336,11 @@ public class DataManager {
 				newData[i] = map.data[o];
 
 				o++;
-				if(xInc < 0 && i % newWidth == map.Width() - -xInc - 1) o += -xInc;
+				if(xInc < 0 && i % newWidth == map.width - -xInc - 1) o += -xInc;
 			}
 		}
 
-		map = new Map(map.Name(), newData, newWidth, newHeight, map.TexturePalette());
+		map = new Map(map.name, newData, newWidth, newHeight, map.texturePalette);
 	}
 
 	//---------------------------------------------------------------------
@@ -325,14 +349,14 @@ public class DataManager {
 	//Creates a new instance of Map and saves the previous state to the undoStack.
 	public static void updateStack()
 	{
-		undoStack.add(new Map(map.Name(),map.data.clone(), map.Width(), map.Height(), map.TexturePalette()));
+		undoStack.add(new Map(map.name,map.data.clone(), map.width, map.height, map.texturePalette));
 	}
 
 	//Undo a previous edit to the map
 	public static void undoAction()
 	{
 		if(undoStack.empty()) return;
-		redoStack.add(new Map(map.Name(),map.data.clone(), map.Width(), map.Height(), map.TexturePalette()));
+		redoStack.add(new Map(map.name,map.data.clone(), map.width, map.height, map.texturePalette));
 		map = undoStack.pop();
 	}
 
@@ -340,7 +364,7 @@ public class DataManager {
 	public static void redoAction()
 	{
 		if(redoStack.empty()) return;
-		undoStack.add(new Map(map.Name(),map.data.clone(), map.Width(), map.Height(), map.TexturePalette()));
+		undoStack.add(new Map(map.name,map.data.clone(), map.width, map.height, map.texturePalette));
 		map = redoStack.pop();
 	}
 }
